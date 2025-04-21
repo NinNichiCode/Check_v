@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Author: Nhat Ninh
+# Modified date: 21/04/2025
+# Description: This script automatically lints Verilog (.v)
+              # Highlights critical errors first and suggests fixes for common coding issues
+# Usage: check_v
 
 SRC="$1"
 LOG_DIR="./verilator_logs"
@@ -54,7 +59,7 @@ if [[ -f "$SRC" && "$SRC" == *.v ]]; then
     echo "⚠️  Cảnh báo trong: $SRC"
     cat "$log_file"
   else
-    echo "✅ OK: $SRC"
+    echo " OK: $SRC"
   fi
 
 
@@ -94,7 +99,7 @@ elif [[ -d "$SRC" ]]; then
 
 
     else
-      echo "✅ OK: $file" >> "$SUMMARY"
+      echo " OK: $file" >> "$SUMMARY"
     fi
   done
 

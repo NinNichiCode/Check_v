@@ -1,0 +1,120 @@
+#!/bin/bash
+
+
+SRC="$1"
+LOG_DIR="./verilator_logs"
+SUMMARY="./verilator_summary.log"
+TMP_ERR_LIST="./verilator_error_files.tmp"
+
+
+mkdir -p "$LOG_DIR"
+> "$SUMMARY"
+> "$TMP_ERR_LIST"
+
+
+if [ -z "$SRC" ]; then
+  echo "❌ Vui lòng cung cấp tên file .v hoặc thư mục cần kiểm tra!"
+  exit 1
+fi
+
+
+echo " Phân tích cú pháp và logic với Verilator"
+echo "==========================================="
+
+
+# Nếu là file .v
+if [[ -f "$SRC" && "$SRC" == *.v ]]; then
+  base=$(basename "$SRC")
+  log_file="$LOG_DIR/${base%.v}.log"
+
+
+  echo "📘 Đang kiểm tra file: $SRC"
+  verilator --lint-only -Wall -Wno-fatal "$SRC" > "$log_file" 2>&1
+
+
+  # Kiểm tra lỗi về timing (Verilator không hỗ trợ delay kiểu #(...))
+  if grep -q "Error-NEEDTIMINGOPT" "$log_file"; then
+    echo " => Bỏ qua file vì có delay Verilator không hỗ trợ (NEEDTIMINGOPT): $SRC"
+    exit 0
+  fi
+
+
+  first_syntax_err=$(grep -m 1 "syntax error" "$log_file")
+  if [[ -n "$first_syntax_err" ]]; then
+    echo " ✨ Gợi ý: Có lỗi cú pháp sớm nhất (có thể gây ra các lỗi khác):"
+    echo " => $first_syntax_err"
+    echo ""
+  fi
+
+
+  if grep -q "Error" "$log_file"; then
+    echo "❌ Lỗi trong: $SRC"
+    cat "$log_file"
+  elif grep -q "Warning" "$log_file"; then
+    echo "⚠️  Cảnh báo trong: $SRC"
+    cat "$log_file"
+  else
+    echo "✅ OK: $SRC"
+  fi
+
+
+
+
+
+
+# Nếu là thư mục
+elif [[ -d "$SRC" ]]; then
+  for file in $(find "$SRC" -type f -name "*.v"); do
+    base=$(basename "$file")
+    log_file="$LOG_DIR/${base%.v}.log"
+
+
+    echo " Đang phân tích: $file"
+    verilator --lint-only -Wall -Wno-fatal "$file" > "$log_file" 2>&1
+
+
+    if grep -q "Error-NEEDTIMINGOPT" "$log_file"; then
+      echo "⚠️  Bỏ qua file vì có delay Verilator không hỗ trợ (NEEDTIMINGOPT): $file"
+      echo " Bỏ qua (delay): $file" >> "$SUMMARY"
+      continue
+    fi
+
+
+    if grep -q "Error" "$log_file"; then
+      echo "❌ Lỗi: $file" >> "$SUMMARY"
+      echo "   • $file" >> "$TMP_ERR_LIST"
+      cat "$log_file" >> "$SUMMARY"
+      echo "" >> "$SUMMARY"
+
+
+    elif grep -q "Warning" "$log_file"; then
+      echo "⚠️  Cảnh báo: $file" >> "$SUMMARY"
+      cat "$log_file" >> "$SUMMARY"
+      echo "" >> "$SUMMARY"
+
+
+    else
+      echo "✅ OK: $file" >> "$SUMMARY"
+    fi
+  done
+
+
+  echo ""
+  echo " Tổng hợp kết quả tại: $SUMMARY"
+
+
+  if [ -s "$TMP_ERR_LIST" ]; then
+    echo "❌ Các file gặp lỗi:"
+    cat "$TMP_ERR_LIST" | sed 's/^/    /'
+  else
+    echo "✅ Không phát hiện lỗi nào."
+  fi
+
+
+  rm -f "$TMP_ERR_LIST"
+
+
+else
+  echo "❌ Không tìm thấy file hoặc thư mục: $SRC"
+  exit 1
+fi

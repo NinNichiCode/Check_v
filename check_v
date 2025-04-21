@@ -18,10 +18,9 @@ mkdir -p "$LOG_DIR"
 
 
 if [ -z "$SRC" ]; then
-  echo "❌ Vui lòng cung cấp tên file .v hoặc thư mục cần kiểm tra!"
+  echo " Vui lòng cung cấp tên file .v hoặc thư mục cần kiểm tra!"
   exit 1
 fi
-
 
 echo " Phân tích cú pháp và logic với Verilator"
 echo "==========================================="
@@ -61,10 +60,6 @@ if [[ -f "$SRC" && "$SRC" == *.v ]]; then
   else
     echo " OK: $SRC"
   fi
-
-
-
-
 
 
 # Nếu là thư mục

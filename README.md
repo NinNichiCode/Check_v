@@ -8,6 +8,7 @@
 => Improved code cleanliness for synthesis stages.
 
 demo:
+
 ![image](https://github.com/user-attachments/assets/f6f510f3-d8f5-4778-bb1e-4b38ec959ba9)
 
 ![image](https://github.com/user-attachments/assets/ae22ceed-0004-4a49-9ad8-c3c281df0714)

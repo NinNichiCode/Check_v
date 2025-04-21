@@ -32,7 +32,7 @@ if [[ -f "$SRC" && "$SRC" == *.v ]]; then
   log_file="$LOG_DIR/${base%.v}.log"
 
 
-  echo "📘 Đang kiểm tra file: $SRC"
+  echo " Đang kiểm tra file: $SRC"
   verilator --lint-only -Wall -Wno-fatal "$SRC" > "$log_file" 2>&1
 
 
